@@ -76,6 +76,8 @@ def stream_to_file(text, voice_clone_prompt, file, ctx=None):
         
         full_audio = smooth_append(full_audio, chunk, overlap_samples=200)
         print(f"Processed chunk. Total length: {len(full_audio)}")
+        # if len(full_audio) > 500_000: # uncomment this to put an upper bound on audio generation
+        #     break
 
     sf.write(file, full_audio, sample_rate, format="WAV")
     print("file saved")
