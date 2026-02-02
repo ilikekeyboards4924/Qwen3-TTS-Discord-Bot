@@ -2,7 +2,7 @@ import time
 import numpy as np
 import torch
 import soundfile as sf
-from qwen_tts import Qwen3TTSModel
+from qwen.qwen_tts import Qwen3TTSModel
 import discord
 from discord.ext import commands
 import os
