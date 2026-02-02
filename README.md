@@ -4,3 +4,5 @@ something that the Qwen3 tts research paper claimed that it had, but it DOESN'T 
 
 if you want to add your own voice to the bot, just create a `voice_clone_prompt` with the aforementioned model and save the resulting `.pt` file in the embedding folder.
 make sure to use the `1.7b` parameter model when generating the `voice_clone_prompt` and not the `0.6b` parameter model.
+
+make sure you enable all the correct permissions in the discord developer portal as well.
