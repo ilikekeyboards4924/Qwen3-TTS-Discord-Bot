@@ -82,6 +82,37 @@ def stream_to_file(text, voice_clone_prompt, file, ctx=None):
     sf.write(file, full_audio, sample_rate, format="WAV")
     print("file saved")
 
+def stream_to_bot(text, voice_clone_prompt, ctx):
+    vc = ctx.voice_client
+
+    sample_rate = 24000
+    full_audio = np.array([], dtype=np.float32) 
+
+    for chunk, chunk_sr in model.stream_generate_voice_clone(
+        text=text, 
+        language="English", 
+        voice_clone_prompt=voice_clone_prompt, 
+        emit_every_frames=4, 
+        decode_window_frames=20, 
+        overlap_samples=512
+    ):
+        if torch.is_tensor(chunk):
+            chunk = chunk.cpu().numpy()
+        
+        # full_audio = smooth_append(full_audio, chunk, overlap_samples=200)
+        # print(f"Processed chunk. Total length: {len(full_audio)}")
+
+        print(f"chunk created. chunk size = {len(chunk)}")
+
+        # try streaming real-time without the smooth append
+
+        buffer = io.BytesIO()
+        sf.write(buffer, chunk, sample_rate, format="WAV")
+        buffer.seek(0)
+
+        source = discord.FFmpegPCMAudio(buffer, pipe=True, executable="ffmpeg")
+        
+        vc.play(source, after=lambda e: print(f'played chunk: {e}') if e else None)
 
 @bot.event
 async def on_ready():
@@ -109,15 +140,17 @@ async def speak(ctx, voice_name: str, *, prompt: str):
     if ctx.voice_client:
         print("currently in channel")
 
-        vc = ctx.voice_client
+        stream_to_bot(prompt, voice_cache[voice_name], ctx)
 
-        buffer = io.BytesIO()
-        stream_to_file(prompt, voice_cache[voice_name], buffer)
-        buffer.seek(0)
+        # vc = ctx.voice_client
 
-        source = discord.FFmpegPCMAudio(buffer, pipe=True, executable="ffmpeg")
+        # buffer = io.BytesIO()
+        # stream_to_file(prompt, voice_cache[voice_name], buffer)
+        # buffer.seek(0)
+
+        # source = discord.FFmpegPCMAudio(buffer, pipe=True, executable="ffmpeg")
         
-        vc.play(source, after=lambda e: print(f'finished speaking: {e}') if e else None)
+        # vc.play(source, after=lambda e: print(f'finished speaking: {e}') if e else None)
 
     else:
         print("currently not connected to any channels")
