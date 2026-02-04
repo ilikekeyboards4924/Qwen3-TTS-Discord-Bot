@@ -2601,7 +2601,7 @@ class Qwen3TTSForConditionalGeneration(Qwen3TTSPreTrainedModel, GenerationMixin)
         # Streaming control
         emit_every_frames: int = 8,
         decode_window_frames: int = 80,
-        overlap_samples: int = 512,
+        overlap_samples: int = 0,
         max_frames: int = 10000,
         # Optimization flags
         use_optimized_decode: bool = True,

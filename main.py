@@ -61,7 +61,8 @@ def smooth_append(existing_audio, new_chunk, overlap_samples=200):
 
 def stream_to_file(text, voice_clone_prompt, file, ctx=None):
     sample_rate = 24000
-    full_audio = np.array([], dtype=np.float32) 
+    full_audio = np.array([], dtype=np.float32)
+    audio_chunks = []
 
     for chunk, chunk_sr in model.stream_generate_voice_clone(
         text=text, 
@@ -69,15 +70,19 @@ def stream_to_file(text, voice_clone_prompt, file, ctx=None):
         voice_clone_prompt=voice_clone_prompt, 
         emit_every_frames=8, 
         decode_window_frames=80, 
-        overlap_samples=512
+        overlap_samples=0
     ):
         if torch.is_tensor(chunk):
             chunk = chunk.cpu().numpy()
-        
-        full_audio = smooth_append(full_audio, chunk, overlap_samples=200)
-        print(f"Processed chunk. Total length: {len(full_audio)}")
+
+        audio_chunks.append(chunk)
+        print(f"chunk generated. length: {len(chunk)}")
+        # full_audio = smooth_append(full_audio, chunk, overlap_samples=200)
+        # print(f"Processed chunk. Total length: {len(full_audio)}")
         # if len(full_audio) > 500_000: # uncomment this to put an upper bound on audio generation
         #     break
+
+    full_audio = np.concatenate(audio_chunks)
 
     sf.write(file, full_audio, sample_rate, format="WAV")
     print("file saved")
@@ -94,7 +99,7 @@ def stream_to_bot(text, voice_clone_prompt, ctx):
         voice_clone_prompt=voice_clone_prompt, 
         emit_every_frames=4, 
         decode_window_frames=20, 
-        overlap_samples=512
+        overlap_samples=0
     ):
         if torch.is_tensor(chunk):
             chunk = chunk.cpu().numpy()
@@ -140,17 +145,17 @@ async def speak(ctx, voice_name: str, *, prompt: str):
     if ctx.voice_client:
         print("currently in channel")
 
-        stream_to_bot(prompt, voice_cache[voice_name], ctx)
+        # stream_to_bot(prompt, voice_cache[voice_name], ctx)
 
-        # vc = ctx.voice_client
+        vc = ctx.voice_client
 
-        # buffer = io.BytesIO()
-        # stream_to_file(prompt, voice_cache[voice_name], buffer)
-        # buffer.seek(0)
+        buffer = io.BytesIO()
+        stream_to_file(prompt, voice_cache[voice_name], buffer)
+        buffer.seek(0)
 
-        # source = discord.FFmpegPCMAudio(buffer, pipe=True, executable="ffmpeg")
+        source = discord.FFmpegPCMAudio(buffer, pipe=True, executable="ffmpeg")
         
-        # vc.play(source, after=lambda e: print(f'finished speaking: {e}') if e else None)
+        vc.play(source, after=lambda e: print(f'finished speaking: {e}') if e else None)
 
     else:
         print("currently not connected to any channels")

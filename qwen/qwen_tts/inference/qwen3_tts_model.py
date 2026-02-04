@@ -696,7 +696,7 @@ class Qwen3TTSModel:
         # Streaming control
         emit_every_frames: int = 8,
         decode_window_frames: int = 80,
-        overlap_samples: int = 512,
+        overlap_samples: int = 0,
         max_frames: int = 10000,
         # Optimization
         use_optimized_decode: bool = True,
